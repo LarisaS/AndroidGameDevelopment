@@ -1,34 +1,53 @@
 package com.app.robotsgame;
 
+import com.app.robotsgame.graphics.GameRenderer;
+
 import android.app.Activity;
+import android.app.ActivityManager;
+import android.content.pm.ConfigurationInfo;
+import android.opengl.GLSurfaceView;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.widget.Toast;
 
 public class MainScreen extends Activity {
 
+	private GLSurfaceView gameSurface;
+	private boolean isRendererSet=false;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.main_screen);
-	}
-
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.main_screen, menu);
-		return true;
-	}
-
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		// Handle action bar item clicks here. The action bar will
-		// automatically handle clicks on the Home/Up button, so long
-		// as you specify a parent activity in AndroidManifest.xml.
-		int id = item.getItemId();
-		if (id == R.id.action_settings) {
-			return true;
+		gameSurface=new GLSurfaceView(this);
+		if(isOpenGLES2Supported()){
+			gameSurface.setEGLContextClientVersion(2);
+			gameSurface.setRenderer(new GameRenderer(this));
+			setContentView(gameSurface);
+		} else {
+			Toast.makeText(this, "OpenGL ES 2 is not supported!!!", Toast.LENGTH_LONG).show();
+			return;
 		}
-		return super.onOptionsItemSelected(item);
+		
+		
 	}
+	
+	protected void onPause(){
+		super.onPause();
+		if(isRendererSet){
+			gameSurface.onPause();
+		}
+	}
+	
+	protected void onResume(){
+		super.onResume();
+		if(isRendererSet){
+			gameSurface.onResume();
+		}
+	}
+
+	private boolean isOpenGLES2Supported() {
+		ActivityManager activityManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+		ConfigurationInfo configurationInfo = activityManager.getDeviceConfigurationInfo();
+		return configurationInfo.reqGlEsVersion >= 0x20000;
+	}
+
 }
